@@ -1,0 +1,5 @@
+{
+  "nbHits": 2,
+  "hits": "this should have been a list of hit objects",
+  "query": "async rust"
+}

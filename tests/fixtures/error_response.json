@@ -1,0 +1,5 @@
+{
+  "error": "Method not allowed",
+  "status": 405,
+  "message": "Algolia rejected the request"
+}

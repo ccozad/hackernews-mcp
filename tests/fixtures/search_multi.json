@@ -1,0 +1,64 @@
+{
+  "hits": [
+    {
+      "objectID": "26406989",
+      "title": "Why asynchronous Rust doesn't work",
+      "url": "https://theta.eu.org/2021/03/08/async-rust-2.html",
+      "points": 603,
+      "author": "tazjin",
+      "num_comments": 482,
+      "created_at": "2021-03-10T02:16:55Z",
+      "created_at_i": 1615342615,
+      "_tags": ["story", "author_tazjin", "story_26406989"],
+      "_highlightResult": {
+        "title": {
+          "value": "Why asynchronous <em>Rust</em> doesn't work",
+          "matchLevel": "full"
+        }
+      }
+    },
+    {
+      "objectID": "30000001",
+      "title": "Ask HN: How do you keep async Rust code readable?",
+      "url": null,
+      "points": 42,
+      "author": "curious_dev",
+      "num_comments": 17,
+      "created_at": "2024-05-01T09:00:00Z",
+      "created_at_i": 1714554000,
+      "story_text": "I keep drowning in nested futures...",
+      "_tags": ["story", "ask_hn", "author_curious_dev", "story_30000001"],
+      "_highlightResult": {
+        "story_text": {
+          "value": "I keep drowning in nested <em>futures</em>...",
+          "matchLevel": "full"
+        }
+      }
+    },
+    {
+      "objectID": "30000123",
+      "title": null,
+      "url": null,
+      "points": null,
+      "author": "grumpy_hacker",
+      "num_comments": null,
+      "created_at": "2024-05-02T11:30:00Z",
+      "created_at_i": 1714649400,
+      "comment_text": "Async Rust is fine once you stop fighting the borrow checker.",
+      "_tags": ["comment", "author_grumpy_hacker", "story_30000001"],
+      "_highlightResult": {
+        "comment_text": {
+          "value": "<em>Async</em> Rust is fine once you stop fighting the borrow checker.",
+          "matchLevel": "full"
+        }
+      }
+    }
+  ],
+  "nbHits": 3,
+  "page": 0,
+  "nbPages": 1,
+  "hitsPerPage": 10,
+  "processingTimeMS": 2,
+  "query": "async rust",
+  "params": "query=async+rust&hitsPerPage=10"
+}

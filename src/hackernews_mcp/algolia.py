@@ -164,6 +164,15 @@ async def search_hackernews(
     if response.status_code >= 400:
         raise UpstreamError(response.status_code, response.text[:200] or None)
 
-    payload = response.json()
-    raw_hits = payload.get("hits", []) if isinstance(payload, dict) else []
-    return [parse_hit(h) for h in raw_hits]
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise UpstreamError(response.status_code, "response body was not valid JSON") from exc
+
+    # Be defensive about the payload shape: a missing or wrongly-typed "hits"
+    # field, or a stray non-object hit, is treated as "no usable results"
+    # rather than crashing the tool call.
+    raw_hits = payload.get("hits") if isinstance(payload, dict) else None
+    if not isinstance(raw_hits, list):
+        return []
+    return [parse_hit(h) for h in raw_hits if isinstance(h, dict)]
