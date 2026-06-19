@@ -126,6 +126,43 @@ def parse_hit(raw: dict[str, Any]) -> Hit:
     )
 
 
+async def get_json(
+    path: str,
+    *,
+    params: dict[str, Any] | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> Any:
+    """GET ``BASE_URL + path`` and return the decoded JSON body.
+
+    Shared by every Algolia-backed tool so the timeout, User-Agent, and error
+    contract live in one place: HTTP 4xx/5xx raise :class:`UpstreamError`,
+    timeouts raise :class:`UpstreamTimeoutError`, and a non-JSON body raises
+    :class:`UpstreamError`. Pass ``client`` to reuse a configured
+    ``httpx.AsyncClient`` (tests inject a mocked transport this way).
+    """
+    owns_client = client is None
+    if client is None:
+        client = httpx.AsyncClient(
+            timeout=DEFAULT_TIMEOUT,
+            headers={"User-Agent": USER_AGENT},
+        )
+    try:
+        response = await client.get(f"{BASE_URL}{path}", params=params)
+    except httpx.TimeoutException as exc:
+        raise UpstreamTimeoutError(DEFAULT_TIMEOUT) from exc
+    finally:
+        if owns_client:
+            await client.aclose()
+
+    if response.status_code >= 400:
+        raise UpstreamError(response.status_code, response.text[:200] or None)
+
+    try:
+        return response.json()
+    except ValueError as exc:
+        raise UpstreamError(response.status_code, "response body was not valid JSON") from exc
+
+
 async def search_hackernews(
     query: str,
     tag: Tag = "story",
@@ -146,28 +183,7 @@ async def search_hackernews(
     """
     _validate(query, tag, time_range, sort, limit)
     path, params = build_search_request(query, tag, time_range, sort, limit, now=now)
-
-    owns_client = client is None
-    if client is None:
-        client = httpx.AsyncClient(
-            timeout=DEFAULT_TIMEOUT,
-            headers={"User-Agent": USER_AGENT},
-        )
-    try:
-        response = await client.get(f"{BASE_URL}{path}", params=params)
-    except httpx.TimeoutException as exc:
-        raise UpstreamTimeoutError(DEFAULT_TIMEOUT) from exc
-    finally:
-        if owns_client:
-            await client.aclose()
-
-    if response.status_code >= 400:
-        raise UpstreamError(response.status_code, response.text[:200] or None)
-
-    try:
-        payload = response.json()
-    except ValueError as exc:
-        raise UpstreamError(response.status_code, "response body was not valid JSON") from exc
+    payload = await get_json(path, params=params, client=client)
 
     # Be defensive about the payload shape: a missing or wrongly-typed "hits"
     # field, or a stray non-object hit, is treated as "no usable results"

@@ -38,3 +38,43 @@ class Hit(BaseModel):
         default=None,
         description="Highlighted snippet from Algolia, if one was provided.",
     )
+
+
+# Thread bounding limits (see get_hackernews_thread).
+MAX_COMMENTS_LIMIT = 500
+MAX_DEPTH_LIMIT = 20
+
+
+class ThreadRoot(BaseModel):
+    """The story (or comment) at the top of a fetched thread."""
+
+    id: str = Field(description="The HN item id.")
+    title: str | None = Field(default=None, description="Story title; None for comment roots.")
+    url: str | None = Field(default=None, description="Story URL; None for text/ask/comment.")
+    points: int | None = Field(default=None, description="Score, when present.")
+    author: str | None = Field(default=None, description="Submitter username.")
+    created_at: str | None = Field(default=None, description="ISO8601 creation timestamp.")
+    text: str | None = Field(default=None, description="Body text for text/ask posts or comments.")
+
+
+class ThreadComment(BaseModel):
+    """A single comment, flattened out of the reply tree."""
+
+    id: str = Field(description="The HN comment id.")
+    parent_id: str | None = Field(default=None, description="Id of the parent item.")
+    author: str | None = Field(default=None, description="Comment author username.")
+    text: str | None = Field(default=None, description="Comment HTML/text.")
+    depth: int = Field(description="Reply depth; 0 for top-level comments on the root.")
+    created_at: str | None = Field(default=None, description="ISO8601 creation timestamp.")
+
+
+class Thread(BaseModel):
+    """A bounded view of a Hacker News thread."""
+
+    root: ThreadRoot
+    comments: list[ThreadComment] = Field(
+        description="Comments flattened depth-first, capped at max_comments."
+    )
+    truncated: bool = Field(
+        description="True if comments were dropped for exceeding max_comments or max_depth.",
+    )

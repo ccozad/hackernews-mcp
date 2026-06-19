@@ -8,8 +8,8 @@ from mcp.shared.memory import create_connected_server_and_client_session
 
 from hackernews_mcp import server as server_module
 from hackernews_mcp.errors import UpstreamError
-from hackernews_mcp.models import Hit
-from hackernews_mcp.server import SEARCH_TOOL, build_server
+from hackernews_mcp.models import Hit, Thread, ThreadComment, ThreadRoot
+from hackernews_mcp.server import SEARCH_TOOL, THREAD_TOOL, build_server
 
 
 def test_server_registers_search_tool() -> None:
@@ -22,10 +22,38 @@ def test_server_registers_search_tool() -> None:
     assert "search phrase" in SEARCH_TOOL.description.lower()
 
 
-async def test_list_tools_over_session() -> None:
+def test_server_registers_thread_tool() -> None:
+    assert THREAD_TOOL.name == "get_hackernews_thread"
+    assert THREAD_TOOL.inputSchema["required"] == ["item_id"]
+    assert THREAD_TOOL.description is not None
+    assert "item id" in THREAD_TOOL.description.lower()
+
+
+async def test_list_tools_registers_both_tools() -> None:
     async with create_connected_server_and_client_session(build_server()) as client:
         result = await client.list_tools()
-    assert [t.name for t in result.tools] == ["search_hackernews"]
+    assert {t.name for t in result.tools} == {"search_hackernews", "get_hackernews_thread"}
+
+
+async def test_call_thread_tool_returns_structured_thread(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_thread(**kwargs: object) -> Thread:
+        return Thread(
+            root=ThreadRoot(id="1", title="t"),
+            comments=[ThreadComment(id="2", parent_id="1", depth=0)],
+            truncated=True,
+        )
+
+    monkeypatch.setattr(server_module, "get_hackernews_thread", fake_thread)
+    async with create_connected_server_and_client_session(build_server()) as client:
+        result = await client.call_tool("get_hackernews_thread", {"item_id": "1"})
+
+    assert result.isError is False
+    assert result.structuredContent is not None
+    assert result.structuredContent["truncated"] is True
+    assert result.structuredContent["root"]["id"] == "1"
+    assert result.structuredContent["comments"][0]["id"] == "2"
 
 
 async def test_call_tool_returns_structured_hits(monkeypatch: pytest.MonkeyPatch) -> None:
