@@ -3,17 +3,15 @@
 Saved transcripts of Claude using this MCP server, so you can see what the tools
 do before wiring anything up.
 
-> **These four files are templates.** Each one has the suggested prompt and the
-> tool call Claude is expected to make pre-filled; the reasoning, tool response,
-> and final answer are placeholders to paste a **real** Claude Desktop session
-> into. See "How to capture" below.
+These are captured from real Claude Desktop sessions (responses trimmed to
+representative samples for readability). Use "How to capture" below to reproduce
+them or add your own.
 
 | # | Transcript | Tools exercised |
 |---|-----------|-----------------|
 | 1 | [Tech trend research](01-tech-trend-research.md) | `search_hackernews` (time-ranged) |
-| 2 | [Ask HN deep dive](02-ask-hn-deep-dive.md) | `search_hackernews` (`tag=ask_hn`) |
-| 3 | [Comparative analysis](03-comparative-analysis.md) | `search_hackernews` ×2 |
-| 4 | [Tool composition](04-tool-composition.md) | `search_hackernews` → `get_hackernews_thread` |
+| 2 | [Ask HN deep dive](02-ask-hn-deep-dive.md) | `search_hackernews` (`tag=ask_hn`) → `get_hackernews_thread` |
+| 3 | [Comparative analysis](03-comparative-analysis.md) | `search_hackernews` → `get_hackernews_thread` ×4 |
 
 ## How to capture
 

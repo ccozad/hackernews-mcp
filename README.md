@@ -5,6 +5,8 @@ client) search and read [Hacker News](https://news.ycombinator.com), backed by
 HN's free [Algolia](https://hn.algolia.com/api) search API. Ask in plain
 language; Claude calls the tools.
 
+![Claude answering “search HN for Rust async” with a ranked list of Hacker News results](images/hackernews-mcp-response.png)
+
 ```text
 You:    What's the discussion on Rust async runtimes been like this past month?
 Claude: → search_hackernews(query="rust async runtime", time_range="past_month")
@@ -14,6 +16,11 @@ You:    Dive into the comments on the top one.
 Claude: → get_hackernews_thread(item_id="…", max_comments=30)
         The top commenters are split on… [summary of the thread]
 ```
+
+The two tools compose — a follow-up like *“pull comments on the first item”*
+feeds the story id straight from the search into `get_hackernews_thread`:
+
+![Claude summarizing the comment thread for the top story](images/hackernews-mcp-thread.png)
 
 > See [`examples/`](examples/) for full transcripts, and
 > [`docs/claude-desktop.md`](docs/claude-desktop.md) to wire it into Claude
@@ -66,7 +73,60 @@ and troubleshooting in [`docs/claude-desktop.md`](docs/claude-desktop.md)):
 ```
 
 Restart Claude Desktop, then ask it to *"search HN for Rust async"* and confirm a
-tool call happens.
+tool call happens. The first time Claude uses a tool, Claude Desktop asks you to
+approve it:
+
+![Claude Desktop prompting to allow the “Search hackernews” tool](images/claude-mcp-permission.png)
+
+## Architecture
+
+Claude Desktop is the MCP **client**: on startup it spawns this server as a
+subprocess and talks to it over stdio. The server exposes two tools and forwards
+their work to HN's Algolia API over HTTPS.
+
+```mermaid
+flowchart LR
+    user([You]) -->|natural-language prompt| desktop[Claude Desktop<br/>MCP client]
+    desktop <-->|MCP / JSON-RPC over stdio| server
+
+    subgraph server [hackernews-mcp server]
+        direction TB
+        t1[search_hackernews]
+        t2[get_hackernews_thread]
+    end
+
+    server <-->|HTTPS GET| algolia[(HN Algolia<br/>Search API)]
+```
+
+### Exchange sequence
+
+A typical two-tool session — search surfaces a story, then a follow-up dives into
+its comments:
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Desktop as Claude Desktop
+    participant Server as hackernews-mcp
+    participant Algolia as HN Algolia API
+
+    Note over Desktop,Server: On launch, Desktop spawns the server<br/>and negotiates initialize + tools/list over stdio
+
+    User->>Desktop: "search HN for Rust async"
+    Desktop->>Server: tools/call search_hackernews(query="rust async")
+    Server->>Algolia: GET /search?query=rust+async&tags=story
+    Algolia-->>Server: matching hits (JSON)
+    Server-->>Desktop: hits array
+    Desktop-->>User: ranked list of stories
+
+    User->>Desktop: "pull comments on the first item"
+    Desktop->>Server: tools/call get_hackernews_thread(item_id="…")
+    Server->>Algolia: GET /items/{item_id}
+    Algolia-->>Server: full nested thread (JSON)
+    Note over Server: flatten depth-first, then bound<br/>by max_comments / max_depth
+    Server-->>Desktop: root, comments, truncated
+    Desktop-->>User: thread summary
+```
 
 ## How it works
 
