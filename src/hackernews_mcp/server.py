@@ -103,14 +103,14 @@ def build_server() -> Server:
     return server
 
 
-async def run() -> None:
+async def run() -> None:  # pragma: no cover - exercised only by a live stdio client
     """Run the stdio MCP server until the client disconnects."""
     server = build_server()
     async with stdio_server() as (read_stream, write_stream):
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover - process entry point
     """Console-script entry point for ``hackernews-mcp``."""
     import anyio
 
