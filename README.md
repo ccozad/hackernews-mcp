@@ -1,5 +1,9 @@
 # Hacker News MCP
 
+<p align="center">
+  <img src="images/hackernews_mcp.png" alt="Architecture: you prompt Claude Desktop (the MCP client), which talks to the hackernews-mcp server over stdio; the server queries the HN Algolia Search API over HTTPS" width="640">
+</p>
+
 An [MCP](https://modelcontextprotocol.io) server that lets Claude (or any MCP
 client) search and read [Hacker News](https://news.ycombinator.com), backed by
 HN's free [Algolia](https://hn.algolia.com/api) search API. Ask in plain
@@ -80,23 +84,9 @@ approve it:
 
 ## Architecture
 
-Claude Desktop is the MCP **client**: on startup it spawns this server as a
-subprocess and talks to it over stdio. The server exposes two tools and forwards
-their work to HN's Algolia API over HTTPS.
-
-```mermaid
-flowchart LR
-    user([You]) -->|natural-language prompt| desktop[Claude Desktop<br/>MCP client]
-    desktop <-->|MCP / JSON-RPC over stdio| server
-
-    subgraph server [hackernews-mcp server]
-        direction TB
-        t1[search_hackernews]
-        t2[get_hackernews_thread]
-    end
-
-    server <-->|HTTPS GET| algolia[(HN Algolia<br/>Search API)]
-```
+As shown in the diagram at the top, Claude Desktop is the MCP **client**: on
+startup it spawns this server as a subprocess and talks to it over stdio. The
+server exposes two tools and forwards their work to HN's Algolia API over HTTPS.
 
 ### Exchange sequence
 
