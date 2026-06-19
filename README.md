@@ -6,8 +6,8 @@ read [Hacker News](https://news.ycombinator.com), backed by HN's free
 client) at it and ask things like "search HN for Rust async" or "summarize the
 top comments on this thread."
 
-> **Status:** scaffold landed. The `search_hackernews` tool is coming in M1,
-> a `get_hackernews_thread` companion tool in M3, and full docs in M4.
+> **Status:** the `search_hackernews` tool is live (M1). A
+> `get_hackernews_thread` companion tool lands in M3, and full docs in M4.
 
 ## Development
 
